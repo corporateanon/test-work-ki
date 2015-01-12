@@ -1,0 +1,35 @@
+body{
+  background-color: #FCEFDA;
+}
+a {
+  color: #ADA386;
+}
+a:hover {
+  color: #4C6B84;
+}
+.pager {
+  text-align: center;
+}
+.pager .page {
+  margin: 0 10px;  
+}
+.list {
+  font-size: 0px;
+}
+.folder {
+  font-size: 16px;
+  display: inline-block;
+  width: 200px;
+  height: 30px;
+  line-height: 30px;
+  overflow: hidden;
+  color: white;
+  background: #ADA386;
+  cursor: pointer;
+  padding:0 10px;
+  margin:0.5px;
+  white-space: nowrap;
+}
+.folder:hover {
+  background: #4C6B84;
+}

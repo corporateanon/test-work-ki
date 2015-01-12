@@ -1,48 +1,41 @@
 (function(apiUrl, defaultFolder, itemsPerPage) {
-  var Cache = function() {
-    function Cache(ttl) {
-      this.ttl = ttl;
-      this.items = {};
-    }
-    Cache.prototype.set = function(key, value) {
-      this.items[key] = [Date.now() + this.ttl, value];
-    };
-    Cache.prototype.get = function(key) {
-      var record = this.items[key];
-      return (record && record[0] > Date.now()) ? record[1] : undefined;
-    };
-    return Cache;
-  }();
-  var FoldersListView = function() {
-    function FoldersListView(el) {
-      this.el = el;
-      el.addEventListener('click', function(event) {
-        var data = event.target.dataset
-        data.action && this['on_' + data.action].apply(this, [data.value]);
-      }.bind(this));
-      this.assets = build(el);
-    }
+  function Cache(ttl) {
+    this.ttl = ttl;
+    this.items = {};
+  }
+  Cache.prototype.set = function(key, value) {
+    this.items[key] = [Date.now() + this.ttl, value];
+  };
+  Cache.prototype.get = function(key) {
+    var record = this.items[key];
+    return (record && record[0] > Date.now()) ? record[1] : undefined;
+  };
 
-    FoldersListView.prototype.setState = function(state) {
-      this.state = state;
-    };
-    FoldersListView.prototype.render = function(assets, state) {
-      var html = (state = this.state).items.map(function(item) {
-        return '<div class="folder" data-action="navigate" data-value="' + item.id + '">' + item.name + '</div>';
-      }).join('');
-      (assets = this.assets)[0].innerHTML = html;
-      assets[1].textContent = 'Page ' + (state.page + 1) + ' of ' + state.totalPages;
-      assets[1].style.display = state.totalPages > 1 ? 'inline-block' : 'none';
-      assets[2].style.display = state.page + 1 < state.totalPages ? 'inline-block' : 'none';
-      assets[3].style.display = state.page > 0 ? 'inline-block' : 'none';
-    };
-
-    function build(el) {
-      el.innerHTML = document.querySelector('.template-folders-list-view').innerHTML;
-      return [el.querySelector('.list'), el.querySelector('.pager > .page'), el.querySelector('.pager > .next'), el.querySelector('.pager > .prev')];
-    }
-    return FoldersListView;
-  }();
+  function FoldersListView(el) {
+    this.el = el;
+    el.addEventListener('click', function(event) {
+      var data = event.target.dataset
+      data.action && this['on_' + data.action].apply(this, [data.value]);
+    }.bind(this));
+    el.innerHTML = document.querySelector('.template-folders-list-view').innerHTML;
+    this.assets = [el.querySelector('.list'), el.querySelector('.pager > .page'), el.querySelector('.pager > .next'), el.querySelector('.pager > .prev'), el.querySelector('.loading'), ];
+  }
+  FoldersListView.prototype.setState = function(state) {
+    this.state = state;
+  };
+  FoldersListView.prototype.setLoading = function(loading) {
+    this.assets[4].classList.toggle('visible', loading)
+  };
+  FoldersListView.prototype.render = function(assets, state) {
+    var html = (state = this.state).items.map(function(item) {
+      return '<div class="folder" data-action="navigate" data-value="' + item.id + '">' + item.name + '</div>';
+    }).join('');
+    (assets = this.assets)[0].innerHTML = html;
+    assets[1].textContent = 'Page ' + (state.page + 1) + ' of ' + state.totalPages;
+    assets[1].style.display = state.totalPages > 1 ? 'inline-block' : 'none';
+    assets[2].style.display = state.page + 1 < state.totalPages ? 'inline-block' : 'none';
+    assets[3].style.display = state.page > 0 ? 'inline-block' : 'none';
+  };
 
   function parseFoldersXml(doc) {
     var items = Array.prototype.slice.call(doc.querySelectorAll('folder'))
@@ -71,6 +64,7 @@
     });
   }
 
+  //----------------------------------------------------------------------
   var cache = new Cache(60000);
   var view = new FoldersListView(document.getElementById('folders'));
   var currentFolder = defaultFolder;
@@ -86,6 +80,7 @@
   };
 
   function update() {
+    view.setLoading(true);
     getFoldersXml(currentFolder, cache).then(function(items) {
       view.setState({
         items: items.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage),
@@ -93,7 +88,8 @@
         totalPages: Math.ceil(items.length / itemsPerPage),
       });
       view.render();
-    });
+      view.setLoading(false);
+    }, view.setLoading.bind(view, false));
   }
   update();
 })('http://unthought.net/jobapi/', 'root', 1000);

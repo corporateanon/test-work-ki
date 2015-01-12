@@ -18,23 +18,27 @@
       data.action && this['on_' + data.action].apply(this, [data.value]);
     }.bind(this));
     el.innerHTML = document.querySelector('.template-folders-list-view').innerHTML;
-    this.assets = [el.querySelector('.list'), el.querySelector('.pager > .page'), el.querySelector('.pager > .next'), el.querySelector('.pager > .prev'), el.querySelector('.loading'), ];
+    this.assets = Array.prototype.slice.call(el.querySelectorAll('[data-asset]'))
+      .reduce(function(assets, node) {
+        return (assets[node.dataset.asset] = node), assets;
+      }, {});
   }
   FoldersListView.prototype.setState = function(state) {
     this.state = state;
   };
   FoldersListView.prototype.setLoading = function(loading) {
-    this.assets[4].classList.toggle('visible', loading)
+    this.assets.loading.classList.toggle('visible', loading)
   };
-  FoldersListView.prototype.render = function(assets, state) {
-    var html = (state = this.state).items.map(function(item) {
+  FoldersListView.prototype.render = function() {
+    var assets = this.assets;
+    var state = this.state;
+    assets.list.innerHTML = state.items.map(function(item) {
       return '<div class="folder" data-action="navigate" data-value="' + item.id + '">' + item.name + '</div>';
     }).join('');
-    (assets = this.assets)[0].innerHTML = html;
-    assets[1].textContent = 'Page ' + (state.page + 1) + ' of ' + state.totalPages;
-    assets[1].style.display = state.totalPages > 1 ? 'inline-block' : 'none';
-    assets[2].style.display = state.page + 1 < state.totalPages ? 'inline-block' : 'none';
-    assets[3].style.display = state.page > 0 ? 'inline-block' : 'none';
+    assets.page.textContent = 'Page ' + (state.page + 1) + ' of ' + state.totalPages;
+    assets.page.classList.toggle('hidden', state.totalPages <= 1);
+    assets.next.classList.toggle('hidden', state.page + 1 >= state.totalPages);
+    assets.prev.classList.toggle('hidden', state.page === 0);
   };
 
   function parseFoldersXml(doc) {

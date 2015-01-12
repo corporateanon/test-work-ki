@@ -10,11 +10,18 @@ a:hover {
 .pager {
   text-align: center;
 }
+.pager .prev,.pager .next {
+  display: inline-block;
+}
 .pager .page {
+  display: inline-block;
   margin: 0 10px;  
 }
 .list {
   font-size: 0px;
+}
+.pager .hidden {
+  display: none;
 }
 .folder {
   font-size: 16px;
